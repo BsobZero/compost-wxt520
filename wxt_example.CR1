@@ -1,0 +1,60 @@
+'Last updated: 2011/11/04
+'By: patrick.t.okeeffe@gmail.com
+
+Const WXT_COM = 1      'datalogger COM port
+Const WXT_SDI = 0      'SDI address
+Const SCAN_INT = 15    'seconds
+Const STAT_INT = 30    'minutes
+
+Public Ptemp
+Public batt_volt
+
+Public WXT(15)
+Alias WXT(1)  = WDmin
+Alias WXT(2)  = WDavg
+Alias WXT(3)  = WDmax
+Alias WXT(4)  = WSmin
+Alias WXT(5)  = WSavg
+Alias WXT(6)  = WSmax
+Alias WXT(7)  = air_temp
+Alias WXT(8)  = RH
+Alias WXT(9)  = air_press
+Alias WXT(10) = Ramt
+Alias WXT(11) = Rdur
+Alias WXT(12) = Rint
+Alias WXT(13) = Hamt
+Alias WXT(14) = Hdur
+Alias WXT(15) = Hint
+
+DataTable (WXT_stats,True,-1)
+	DataInterval (0,STAT_INT,Min,10)
+	Average(15,wxt(1),IEEE4,False)
+	Minimum (1,batt_volt,FP2,0,False)
+	Sample (1,PTemp,FP2)
+EndTable
+
+'DataTable(calc_wxt,TRUE,1)
+'  DataInterval(0,OUT_INT,min,LAPSES)
+'  Totalize(1,N,Long,False)            '1
+'  Average(1,wxt_WD,IEEE4,wxt_WD=NAN)
+'  Average(1,wxt_WS,IEEE4,wxt_WS=NAN)
+'  Average(1,wxt_T,IEEE4,wxt_T=NAN)
+'  Average(1,wxt_RH,IEEE4,wxt_RH=NAN) '5
+'  Average(1,wxt_P,IEEE4,wxt_P=NAN)
+'  Totalize(1,wxt_Ramt,IEEE4,wxt_Ramt=NAN)
+'  Totalize(1,wxt_Rdur,IEEE4,wxt_Rdur=NAN)
+'  Average(1,wxt_Rint,IEEE4,wxt_Rint=NAN OR wxt_Rint<=0)  '9
+'  Average(1,cr3_pTemp,IEEE4,0)
+'  Average(1,cr3_pwrSrc,IEEE4,0)
+'EndTable
+
+
+BeginProg
+	Scan (SCAN_INT,Sec,0,0)
+		PanelTemp (PTemp,250)
+		Battery (Batt_volt)
+		SDI12Recorder(WXT(1),WXT_COM,WXT_SDI,"R!",1,0)      'ask composite message
+		CallTable (WXT_stats)
+	NextScan
+EndProg
+
