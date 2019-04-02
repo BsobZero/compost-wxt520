@@ -57,6 +57,8 @@ to CompactFlash memory card:
 
 * Base name: `compost_WXT520`
 * Record interval: 5 minutes
+* Number of records: approximately 90 days on external memory card (up to 230
+  days internal storage)
 * Fill-stop settings: "ring" mode - overwrites oldest records when card is full
 
 | Field name         | Units   | Description |

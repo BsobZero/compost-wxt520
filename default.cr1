@@ -26,6 +26,8 @@ Const WXT_COM = 1      'datalogger COM port
 Const WXT_SDI = 0      'SDI address
 Const SCAN_INT = 60    'seconds
 Const STAT_INT = 5    'minutes
+Const DAYS_DATA = 90   'how long to store data ON THE CARD? (Ring fill)
+'HINT: internal memory keeps ~230 days, 2GB card can support >300 years  :D
 
 'for WindVector() - MUST BE WHOLE VALUE!
 Const SUBINT = 0 '= STAT_INT * 60 / SCAN_INT / X where X = # of subintervals (or zero)
@@ -84,7 +86,7 @@ DataTable (wxt_work,True,1)
 EndTable
 
 DataTable (compost_WXT520,True,-1)
-  CardOut(0,-1)
+  CardOut(0,DAYS_DATA*1440/STAT_INT)
   DataInterval (0,STAT_INT,Min,10)
   Average(1,power_in,FP2,power_in=NAN)
   Sample (4,work_out(1),FP2)
