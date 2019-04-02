@@ -1,60 +1,124 @@
-'Last updated: 2011/11/04
-'By: patrick.t.okeeffe@gmail.com
+' WXT520 Compost Experiments Weather Logger
+' Patrick O'Keeffe <pokeeffe@wsu.edu>
+' https://github.com/patricktokeeffe/compost-wxt520
+'
+'Copyright 2019  - Washington State University
+'
+'Permission is hereby granted, free of charge, to any person obtaining a 
+'copy of this software and associated documentation files (the "Software"), 
+'to deal in the Software without restriction, including without limitation 
+'the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+'and/or sell copies of the Software, and to permit persons to whom the 
+'Software is furnished to do so, subject to the following conditions:
+'
+'The above copyright notice and this permission notice shall be included in 
+'all copies or substantial portions of the Software.
+'
+'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+'IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+'FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+'THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+'LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+'FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+'DEALINGS IN THE SOFTWARE.
 
 Const WXT_COM = 1      'datalogger COM port
 Const WXT_SDI = 0      'SDI address
-Const SCAN_INT = 15    'seconds
-Const STAT_INT = 30    'minutes
+Const SCAN_INT = 60    'seconds
+Const STAT_INT = 5    'minutes
 
-Public Ptemp
-Public batt_volt
+'for WindVector() - MUST BE WHOLE VALUE!
+Const SUBINT = 0 '= STAT_INT * 60 / SCAN_INT / X where X = # of subintervals (or zero)
+
+Public panel_tmpr
+Public power_in
+Units panel_tmpr = degC
+Units power_in = Vdc
 
 Public WXT(15)
-Alias WXT(1)  = WDmin
-Alias WXT(2)  = WDavg
-Alias WXT(3)  = WDmax
-Alias WXT(4)  = WSmin
-Alias WXT(5)  = WSavg
-Alias WXT(6)  = WSmax
-Alias WXT(7)  = air_temp
+Alias WXT(1)  = WindDir_min
+Alias WXT(2)  = WindDir_avg
+Alias WXT(3)  = WindDir_max
+Alias WXT(4)  = WindSpeed_min
+Alias WXT(5)  = WindSpeed_avg
+Alias WXT(6)  = WindSpeed_max
+Alias WXT(7)  = Tmpr
 Alias WXT(8)  = RH
-Alias WXT(9)  = air_press
-Alias WXT(10) = Ramt
-Alias WXT(11) = Rdur
-Alias WXT(12) = Rint
-Alias WXT(13) = Hamt
-Alias WXT(14) = Hdur
-Alias WXT(15) = Hint
+Alias WXT(9)  = Press
+Alias WXT(10) = R_amt
+Alias WXT(11) = R_dur
+Alias WXT(12) = R_int
+Alias WXT(13) = H_amt
+Alias WXT(14) = H_dur
+Alias WXT(15) = H_int
+Units WindDir_min = degrees
+Units WindDir_avg = degrees
+Units WindDir_max = degrees
+Units WindSpeed_min = m/s
+Units WindSpeed_avg = m/s
+Units WindSpeed_max = m/s
+Units Tmpr = degC
+Units RH = percent
+Units Press = hPa
+Units R_amt = mm
+Units R_dur = sec
+Units R_int = mm/hr
+Units H_amt = hits/cm^2
+Units H_dur = sec
+Units H_int = hits/cm^2/hr
 
-DataTable (WXT_stats,True,-1)
-	DataInterval (0,STAT_INT,Min,10)
-	Average(15,wxt(1),IEEE4,False)
-	Minimum (1,batt_volt,FP2,0,False)
-	Sample (1,PTemp,FP2)
+Dim work_out(4)
+Alias work_out(1) = WindSpeed_sclr_Avg
+Alias work_out(2) = WindSpeed_rslt_Avg
+Alias work_out(3) = WindDir_rslt_Avg
+Alias work_out(4) = WindDir_csi_Std
+Units WindSpeed_sclr_Avg = m/s
+Units WindSpeed_rslt_Avg = m/s
+Units WindDir_rslt_Avg = degrees
+Units WindDir_csi_Std = degrees
+
+
+DataTable (wxt_work,True,1)
+  DataInterval (0,STAT_INT,Min,10)
+  WindVector(1,WindSpeed_avg,WindDir_avg,IEEE4,(WindSpeed_avg=NAN OR WindDir_avg=NAN),SUBINT,0,2)
 EndTable
 
-'DataTable(calc_wxt,TRUE,1)
-'  DataInterval(0,OUT_INT,min,LAPSES)
-'  Totalize(1,N,Long,False)            '1
-'  Average(1,wxt_WD,IEEE4,wxt_WD=NAN)
-'  Average(1,wxt_WS,IEEE4,wxt_WS=NAN)
-'  Average(1,wxt_T,IEEE4,wxt_T=NAN)
-'  Average(1,wxt_RH,IEEE4,wxt_RH=NAN) '5
-'  Average(1,wxt_P,IEEE4,wxt_P=NAN)
-'  Totalize(1,wxt_Ramt,IEEE4,wxt_Ramt=NAN)
-'  Totalize(1,wxt_Rdur,IEEE4,wxt_Rdur=NAN)
-'  Average(1,wxt_Rint,IEEE4,wxt_Rint=NAN OR wxt_Rint<=0)  '9
-'  Average(1,cr3_pTemp,IEEE4,0)
-'  Average(1,cr3_pwrSrc,IEEE4,0)
-'EndTable
+DataTable (compost_WXT520,True,-1)
+  CardOut(0,-1)
+  DataInterval (0,STAT_INT,Min,10)
+  Average(1,power_in,FP2,power_in=NAN)
+  Sample (4,work_out(1),FP2)
+  Average(6,WXT(7),IEEE4,False)
+  'HINT: DON'T POLLUTE FILES WITH HAIL BECAUSE IT BASICALLY NEVER HAPPENS
+  Average(3,WXT(4),IEEE4,False)
+  Average(3,WXT(1),IEEE4,False)
+EndTable
+
+
+DisplayMenu("Compost WXT520",-2)
+  DisplayValue("Batt, Vdc", power_in)
+  DisplayValue("WD, deg", WindDir_avg)
+  DisplayValue("WS, m/s", WindSpeed_avg)
+  DisplayValue("T, *C", Tmpr)
+  DisplayValue("RH, %", RH)
+  DisplayValue("P, hPa", Press)
+EndMenu
 
 
 BeginProg
-	Scan (SCAN_INT,Sec,0,0)
-		PanelTemp (PTemp,250)
-		Battery (Batt_volt)
-		SDI12Recorder(WXT(1),WXT_COM,WXT_SDI,"R!",1,0)      'ask composite message
-		CallTable (WXT_stats)
-	NextScan
+  Scan (SCAN_INT,Sec,0,0)
+    PanelTemp (panel_tmpr,250)
+    Battery (power_in)
+    power_in = Round(power_in, 1)
+    
+    Move(WXT(1),15,NAN,1)
+    SDI12Recorder(WXT(1),WXT_COM,WXT_SDI,"R!",1,0)      'ask composite message
+    CallTable (wxt_work)
+    If (wxt_work.Output(1,1)) Then
+      GetRecord(work_out(1),wxt_work,1)
+    EndIf
+    
+    CallTable (compost_WXT520)
+  NextScan
 EndProg
 
