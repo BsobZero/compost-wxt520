@@ -115,6 +115,12 @@ to CompactFlash memory card:
     * Autosend mode: *n/a for SDI-12*
     * Counter reset: manual (default?)
 
+## Licensing
+
+This software was developed by Patrick O'Keeffe for the [Department of Animal
+Sciences](https://ansci.wsu.edu) at WSU. This software is released under the terms of
+[The MIT License](https://opensource.org/licenses/MIT). 
+
 ## References
 
 * <a name="ref1">Campbell Scientific. *CRBasic Program Reference: WindVector*. CR1000.Std.32.03.
