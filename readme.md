@@ -94,8 +94,7 @@ to CompactFlash memory card:
 
 * Communications: 
     * Address: 0
-    * Protocol: SDI-12 continuous (`aXU,M=S`)
-    * No repeated Composite data messages (`aXU,I=0`)
+    * Protocol: SDI-12 continuous (`aXU,M=R`)
 * Wind sensor:
     * Parameters: all of them (`aXWU,R=1111110011111100`)
     * Update interval: 60 seconds
